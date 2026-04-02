@@ -8,13 +8,13 @@ app.post('/comment', async (req, res) => {
     const { text } = req.body;
     console.log("وصل أمر تعليق جديد:", text);
 
-    // إضافة إعدادات متقدمة لـ Puppeteer لضمان العمل في بيئة Render المحدودة
+    // إعدادات خاصة لـ Render لضمان تشغيل المتصفح
     const browser = await puppeteer.launch({
-        headless: "new", // استخدام النسخة الأحدث من وضع الخفاء
+        headless: "new",
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage', // مهم جداً لتجنب امتلاء الذاكرة في Render
+            '--disable-dev-shm-usage',
             '--single-process',
             '--no-zygote'
         ]
@@ -23,52 +23,45 @@ app.post('/comment', async (req, res) => {
     try {
         const page = await browser.newPage();
         
-        // تعيين User-Agent ليبدو المتصفح كأنه مستخدم حقيقي وليس بوت
+        // محاكاة متصفح حقيقي
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
 
-        // ⚠️ ضع كود الجلسة (sessionid) الخاص بك هنا
+        // --- ⚠️ الجزء المطلوب منك تعديله ---
         await page.setCookie({
             name: 'sessionid',
-            value: 'اكتب_هنا_الكود_الطويل_جداً_الذي_نسخته', 
+            value: 'ضع_هنا_كود_الـ_SESSIONID_الخاص_بك', 
             domain: '.tiktok.com',
             path: '/',
             httpOnly: true,
             secure: true
         });
 
-        // رابط البث المباشر (تأكد من استبدال @username بحسابك)
+        // --- ⚠️ ضع رابط حسابك هنا ---
         await page.goto('https://www.tiktok.com/@اسم_حسابك/live', {
-            waitUntil: 'networkidle2', // الانتظار حتى يستقر الاتصال
+            waitUntil: 'networkidle2',
             timeout: 60000
         });
 
-        // محاولة العثور على خانة الكتابة بذكاء أكبر
+        // البحث عن خانة التعليق
         const chatInput = '[contenteditable="true"]';
         await page.waitForSelector(chatInput, { timeout: 20000 });
         
-        // النقر على الخانة أولاً للتأكد من تفعيلها
         await page.click(chatInput);
-        await page.keyboard.type(text, { delay: 100 }); // تأخير بسيط بين الحروف لتقليد الكتابة البشرية
-        
+        await page.keyboard.type(text, { delay: 100 }); 
         await page.keyboard.press('Enter');
 
-        console.log(`تم إرسال التعليق بنجاح: ${text}`);
+        console.log(`✅ تم الإرسال: ${text}`);
         
-        // إغلاق المتصفح بعد ثانية للتأكد من إرسال التعليق
-        setTimeout(async () => {
-            await browser.close();
-        }, 1000);
+        // إغلاق نظيف للمتصفح
+        setTimeout(async () => { await browser.close(); }, 2000);
 
         res.status(200).send({ success: true });
     } catch (e) {
-        console.error("فشل البوت في إرسال التعليق:", e.message);
-        await browser.close();
+        console.error("❌ فشل الإرسال:", e.message);
+        if (browser) await browser.close();
         res.status(500).send({ error: e.message });
     }
 });
 
-// استخدام المنفذ الذي يوفره Render تلقائياً أو 10000 كاحتياطي
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`المحرك يعمل الآن على المنفذ ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 المحرك يعمل على المنفذ ${PORT}`));
