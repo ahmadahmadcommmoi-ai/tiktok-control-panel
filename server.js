@@ -4,9 +4,9 @@ const app = express();
 app.use(express.json());
 
 app.post('/comment', async (req, res) => {
-    const { message } = req.body;
-    
-    // تشغيل المتصفح بإعدادات Render
+    const { text } = req.body; // البيانات القادمة من Vercel
+    console.log("وصل أمر تعليق جديد:", text);
+
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
@@ -14,26 +14,29 @@ app.post('/comment', async (req, res) => {
     try {
         const page = await browser.newPage();
         
-        // وضع الكوكيز (Session ID)
+        // ⚠️ ضع كود الجلسة الخاص بحسابك هنا
         await page.setCookie({
             name: 'sessionid',
-            value: 'ضع_هنا_كود_الجلسة',
+            value: 'اكتب_هنا_الكود_الطويل_جداً_الذي_نسخته', 
             domain: '.tiktok.com'
         });
 
+        // رابط البث المباشر (استبدله برابطك)
         await page.goto('https://www.tiktok.com/@اسم_حسابك/live');
-        
-        // كود ضغط أزرار تيك توك والكتابة
-        await page.waitForSelector('[contenteditable="true"]');
-        await page.type('[contenteditable="true"]', message);
+
+        // الانتظار حتى تظهر خانة الكتابة
+        await page.waitForSelector('[contenteditable="true"]', { timeout: 15000 });
+        await page.type('[contenteditable="true"]', text);
         await page.keyboard.press('Enter');
 
+        console.log("تم إرسال التعليق بنجاح!");
         await browser.close();
-        res.status(200).send("Done");
+        res.status(200).send({ success: true });
     } catch (e) {
+        console.error("فشل البوت:", e.message);
         await browser.close();
-        res.status(500).send("Error");
+        res.status(500).send({ error: e.message });
     }
 });
 
-app.listen(10000); // المنفذ الافتراضي لـ Render
+app.listen(10000);
