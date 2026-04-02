@@ -4,6 +4,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+    // التعامل مع طلبات Preflight
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -15,17 +16,23 @@ export default async function handler(req, res) {
     const { message } = req.body;
 
     try {
-        // سنقوم بتغيير هذا الرابط بعد أن ننشئ مشروع Replit
-        const replitUrl = 'https://YOUR_REPLIT_URL_HERE/comment';
+        // الرابط الجديد الخاص بخدمة Render التي أنشأتها
+        const renderUrl = 'https://tiktok-control-panel.onrender.com/comment';
         
-        await fetch(replitUrl, {
+        const response = await fetch(renderUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // نرسل النص تحت مفتاح 'text' ليتوافق مع كود الخادم
             body: JSON.stringify({ text: message })
         });
 
-        return res.status(200).json({ success: true });
+        if (!response.ok) {
+            throw new Error('Render Server responded with error');
+        }
+
+        return res.status(200).json({ success: true, info: 'Sent to Render' });
     } catch (error) {
-        return res.status(500).json({ error: 'Replit Connection Failed' });
+        console.error('Error connecting to Render:', error);
+        return res.status(500).json({ error: 'Render Connection Failed', details: error.message });
     }
 }
