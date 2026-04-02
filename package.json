@@ -1,13 +1,17 @@
 {
   "name": "tiktok-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "TikTok Live Bot for Render",
   "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "puppeteer install"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "puppeteer": "^21.0.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   }
 }
